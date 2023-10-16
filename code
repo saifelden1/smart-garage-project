@@ -1,0 +1,145 @@
+#define buzzerPin 3
+#define push 2
+#define led 8
+#define ldr A0
+#include <Servo.h> 
+#include<LiquidCrystal.h>
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+
+Servo myservo1;
+
+#define IR1  12
+#define IR2  11
+
+int Slot = 4;           //Enter Total number of parking Slots
+
+int flag1 = 0;
+int flag2 = 0;
+int ldrval;
+int k=0;
+
+void setup()
+{
+  pinMode(IR1, INPUT);
+pinMode(IR2, INPUT);
+lcd.begin(16,2);
+
+  
+myservo1.attach(10);
+myservo1.write(100);
+
+// lcd.setCursor (0,0);
+// lcd.print("  hi     ");  
+// lcd.setCursor (0,1);
+// lcd.print("  garage is open  "); 
+// delay (3000);
+// lcd.clear(); 
+
+  pinMode(buzzerPin, OUTPUT);
+  pinMode(push, INPUT);
+  pinMode(led, OUTPUT);
+  pinMode(ldr,INPUT);
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  gate();
+  ldrval=analogRead(ldr);
+  Serial.println(ldrval);
+  int read = digitalRead(push);
+  
+  if (read==0){
+    k=!k;
+    delay(500);
+    }
+  if (k==1)//button pressed
+  {
+   emergencySound();
+    emeled();
+    // lcd.setCursor (0,0);
+// lcd.print("   EMERGENCY   ");  
+// lcd.setCursor (0,1);
+// lcd.print("  GO OUT   "); 
+// delay (1000);
+// lcd.clear(); 
+  
+  }else if(k==0)
+  {
+    noTone(buzzerPin);
+    ledsys();
+    // lcd.setCursor (0,0);
+// lcd.print("   WELCOME    ");  
+// lcd.setCursor (0,1);
+// lcd.print("  ENTER  "); 
+// delay (3000);
+// lcd.clear(); 
+    
+   }
+   delay(30);
+
+}
+
+void emergencySound() {
+  // Sound pattern for emergency signal
+  int toneFrequency = 1000;  // Adjust the frequency as per your requirements
+  int toneDuration = 500;   // Adjust the duration as per your requirements
+
+  // Generate the emergency sound
+  tone(buzzerPin, 1000,1000);
+  delay(1500);
+  tone(buzzerPin, 500,1000);
+  
+  // No need for delay here, as the tone will continue until stopped
+}
+
+void ledsys(){
+   if(ldrval>600){
+  digitalWrite(led,HIGH);
+  }
+  else{
+   digitalWrite(led,LOW);
+  }
+
+}
+
+void emeled(){
+  digitalWrite(led,HIGH);
+  delay(300);
+  digitalWrite(led,LOW);
+  delay(300);
+}
+
+void gate(){ 
+
+if(digitalRead (IR1) == LOW && flag1==0){
+if(Slot>0){flag1=1;
+if(flag2==0){myservo1.write(0); Slot = Slot-1;}
+}else{
+// lcd.setCursor (0,0);
+// lcd.print("    SORRY :(    ");  
+// lcd.setCursor (0,1);
+// lcd.print("  Parking Full  "); 
+// delay (3000);
+// lcd.clear(); 
+}
+}
+
+if(digitalRead (IR2) == LOW && flag2==0){flag2=1;
+if(flag1==0){myservo1.write(0); Slot = Slot+1;}
+}
+
+if(flag1==1 && flag2==1){
+delay (1000);
+myservo1.write(100);
+flag1=0, flag2=0;
+}
+
+// lcd.setCursor (0,0);
+// lcd.print("    WELCOME!    ");
+// lcd.setCursor (0,1);
+// lcd.print("Slot Left: ");
+// lcd.print(Slot);
+}
